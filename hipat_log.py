@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 import subprocess, re, time, datetime
 """Will be used to log relevant HiPAT output on a machine."""
 
