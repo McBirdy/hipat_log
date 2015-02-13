@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 import subprocess, re, time, datetime
+from optparse import OptionParser
+
 """Will be used to log relevant HiPAT output on a machine."""
 
 def filter_ntpq(ntpq_output, ip_address):
@@ -27,11 +29,16 @@ def filter_ntpq(ntpq_output, ip_address):
         
 def main():
     """ Opens file, uses filter_ntpq method and writes formatted output to file. Rinse and repeat."""
+    parser = OptionParser(version="%prog 1.0")
+    parser.add_option("-i", "--ip_address", dest="ip_address", default="158.112.116.8", help="Ip address in ntpq -pn query output to log [158.112.116.8]")
+    (options, args) = parser.parse_args()
+    print options.ip_address
+    return
     
     while True:
         f = open('hipat_log.txt', 'a')
         ntpq_output = subprocess.check_output(['ntpq', '-pn'])
-        regex_results = filter_ntpq(ntpq_output, "17.72.148.52")
+        regex_results = filter_ntpq(ntpq_output, options.ip_address)
         
         timestamp = str(datetime.datetime.now())[:-7]
         print_output = "{timestamp} {offset} {jitter}\n".format(timestamp=timestamp, offset=regex_results.group('offset'), jitter=regex_results.group('jitter'))
