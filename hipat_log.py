@@ -31,17 +31,27 @@ def main():
     """ Opens file, uses filter_ntpq method and writes formatted output to file. Rinse and repeat."""
     parser = OptionParser(version="%prog 1.0")
     parser.add_option("-i", "--ip_address", dest="ip_address", default="158.112.116.8", help="Ip address in ntpq -pn query output to log [158.112.116.8]")
+    parser.add_option("-o", "--output_file_name", dest="output_name", default="hipat_log.txt", help="Name of output file [hipat_log.txt]")
     (options, args) = parser.parse_args()
-    print options.ip_address
-    return
+    print "Recording {0} in file {1}".format(options.ip_address, options.output_name)
+    #print "Is this OK? [y/n]"
+    if (raw_input("Is this OK? [y/n]") == "y"):
+        pass
+    else:
+        return
+    
     
     while True:
-        f = open('hipat_log.txt', 'a')
+        f = open(options.output_name, 'a')
         ntpq_output = subprocess.check_output(['ntpq', '-pn'])
         regex_results = filter_ntpq(ntpq_output, options.ip_address)
         
         timestamp = str(datetime.datetime.now())[:-7]
-        print_output = "{timestamp} {offset} {jitter}\n".format(timestamp=timestamp, offset=regex_results.group('offset'), jitter=regex_results.group('jitter'))
+        try:
+            print_output = "{timestamp} {offset} {jitter}\n".format(timestamp=timestamp, offset=regex_results.group('offset'), jitter=regex_results.group('jitter'))
+        except AttributeError:
+            print "Ip address not in <ntpq -pn> query results, please check IP."
+            return
         
         f.write(print_output)
         f.close()
