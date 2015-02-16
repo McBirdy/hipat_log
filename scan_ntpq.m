@@ -27,4 +27,4 @@ for i=1:length(files)
 
 end
 
-%linkaxes([A(1),...], 'xy');
+linkaxes([A], 'xy');
