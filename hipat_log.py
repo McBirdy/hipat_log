@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import subprocess, re, time, datetime
+import subprocess, re, time, datetime, shelve
 from optparse import OptionParser
 
 """Will be used to log relevant HiPAT output on a machine."""
@@ -34,28 +34,43 @@ def main():
     parser.add_option("-o", "--output_file_name", dest="output_name", default="hipat_log.txt", help="Name of output file [hipat_log.txt]")
     (options, args) = parser.parse_args()
     print "Recording {0} in file {1}".format(options.ip_address, options.output_name)
-    #print "Is this OK? [y/n]"
+    """
     if (raw_input("Is this OK? [y/n]") == "y"):
         pass
     else:
         return
+    """
+    
     
     
     while True:
         f = open(options.output_name, 'a')
         ntpq_output = subprocess.check_output(['ntpq', '-pn'])
         regex_results = filter_ntpq(ntpq_output, options.ip_address)
+        # db = shelve.open('/mnt/tmpfs/shelvefile', 'c')
+        db = {'freq_adj': [12, 3400]}
         
+        try:
+            f = open('/mnt/tmpfs/delta_log.txt', 'r+')
+            last = ''
+            for last in f:
+                pass
+            last_offset = re.search(r'\s(\S*)\s*\S*$', last).group(1)
+        except IOError:
+            f = open('/mnt/tmpfs/delta_log.txt', 'a')
+            last_offset = 0
+        
+        delta_offset = float(regex_results.group('offset')) - float(last_offset)
         timestamp = str(datetime.datetime.now())[:-7]
         try:
-            print_output = "{timestamp} {offset} {jitter}\n".format(timestamp=timestamp, offset=regex_results.group('offset'), jitter=regex_results.group('jitter'))
+            print_output = "{timestamp} {steps} {offset} {delta_offset}\n".format(timestamp=timestamp, steps=db['freq_adj'][1], offset=regex_results.group('offset'), delta_offset=delta_offset)
         except AttributeError:
             print "Ip address not in <ntpq -pn> query results, please check IP."
             return
         
         f.write(print_output)
         f.close()
-        
+        return
         time.sleep(60)
         
         
